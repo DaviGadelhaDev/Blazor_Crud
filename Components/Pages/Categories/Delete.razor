@@ -1,0 +1,61 @@
+﻿@page "/categories/delete/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigate
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@if(Category is null)
+{
+    <p class="text-center"> 
+        <em>Nenhuma categoria encontrada</em>
+    </p>
+}
+else
+{
+    <h1>Editar categoria</h1>
+    <EditForm Model="@Category" OnSubmit="OnValidSubmitAsync">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <div>
+            <label class="form-label">Nome da categoria: </label>
+            <InputText @bind-Value="Category.Title" class="form-control" />
+            <ValidationMessage For="@(() => Category.Title)" />
+        </div>
+        @if (ErrorMessage == true)
+        {
+            <div>
+                <p>Não foi possível excluir a categoria</p>
+            </div>
+        }
+        <button class="btn btn-danger mt-4 rounded" type="submit">Excluir</button>
+    </EditForm>
+}
+
+@code{
+    [Parameter]
+    public int Id { get; set; }
+    public Category? Category { get; set; }
+    public bool ErrorMessage { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Category = await Context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Id);
+    }
+
+    public async Task OnValidSubmitAsync()
+    {
+        try
+        {
+            Context.Categories.Remove(Category);
+            await Context.SaveChangesAsync();
+            ErrorMessage = false;
+            Navigate.NavigateTo("/categories");
+        }
+        catch
+        {
+            ErrorMessage = true;
+        }
+    }
+}
+

@@ -1,0 +1,76 @@
+﻿@page "/products/edit/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigate
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@if (Model is null)
+{
+    <p class="text-center">
+        <em>Nenhum produto ]encontrado</em>
+    </p>
+}
+else
+{
+    <h1>Editar produto</h1>
+    <EditForm Model="@Model" OnSubmit="OnValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div>
+            <label class="form-label">Nome da categoria: </label>
+            <InputText @bind-Value="Model.Title" class="form-control" />
+            <ValidationMessage For="@(() => Model.Title)" />
+        </div>
+        <div>
+            <label class="form-label">Categoria: </label>
+            <InputSelect @bind-Value="Model.CategoryId" class="form-control">
+                @foreach(var category in Categories)
+                {
+                    <option value="@category.Id">@category.Title</option>
+                }
+            </InputSelect>
+        </div>
+        <div>
+            <label class="form-label">Preço: </label>
+            <InputNumber @bind-Value="Model.Price" class="form-control" />
+            <ValidationMessage For="@(() => Model.Price)" />
+        </div>
+        @if (ErrorMessage == true)
+        {
+            <div>
+                <p>Não foi possível editar a categoria</p>
+            </div>
+        }
+        <button class="btn btn-success mt-4 rounded" type="submit">Editar</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    public Product? Model { get; set; }
+    public List<Category> Categories { get; set; }
+    public bool ErrorMessage { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Context.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Id);
+        Categories = await Context.Categories.AsNoTracking().OrderBy(x => x.Title).ToListAsync();
+    }
+
+    public async Task OnValidSubmitAsync()
+    {
+        try
+        {
+            Context.Products.Update(Model);
+            await Context.SaveChangesAsync();
+            ErrorMessage = false;
+            Navigate.NavigateTo("/products");
+        }
+        catch
+        {
+            ErrorMessage = true;
+        }
+    }
+}

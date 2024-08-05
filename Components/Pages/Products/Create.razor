@@ -1,0 +1,69 @@
+﻿@page "/products/create"
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigate
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h1>Novo produto</h1>
+<a href="/products" class="btn btn-secondary">Voltar</a>
+<br />
+<EditForm Model="@Model" OnValidSubmit="OnSubmitAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label class="form-label">Nome do produto: </label>
+        <InputText @bind-Value="Model.Title" class="form-control" />
+        <ValidationMessage For="@(() => Model.Title)" />
+    </div>
+    <div>
+        <label class="form-label">Preço: </label>
+        <InputNumber @bind-Value="Model.Price" class="form-control" />
+        <ValidationMessage For="@(() => Model.Price)" />
+    </div>
+    <div>
+        <label class="form-label">Categoria: </label>
+        <InputSelect @bind-Value="Model.CategoryId" class="form-control" >
+            @foreach(var category in Categories)
+            {
+                <option value="@category.Id">
+                    @category.Title
+                </option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => Model.Price)" />
+    </div>
+    @if (ErrorMessage == true)
+    {
+        <div>
+            <p>Não foi possível criar o produto</p>
+        </div>
+    }
+    <button class="btn btn-success mt-4 rounded" type="submit">Criar</button>
+</EditForm>
+
+@code {
+    public Product Model { get; set; } = new();
+    public List<Category> Categories { get; set; } = new();
+    public bool ErrorMessage { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await Context.Categories.AsNoTracking().ToListAsync();
+    }
+
+    public async Task OnSubmitAsync()
+    {
+        try
+        {
+            await Context.Products.AddAsync(Model);
+            await Context.SaveChangesAsync();
+            Navigate.NavigateTo("/products");
+        }
+        catch
+        {
+            ErrorMessage = true;
+        }
+    }
+}

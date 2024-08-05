@@ -1,0 +1,42 @@
+﻿@page "/categories/create"
+@inject ApplicationDbContext Context
+@inject NavigationManager Navigate
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "admin")]
+
+<h1>Nova Categoria</h1>
+<a href="/categories" class="btn btn-secondary">Voltar</a>
+<br />
+<EditForm Model="@Model" OnValidSubmit="OnSubmitAsync">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <div>
+        <label class="form-label">Nome da categoria: </label>
+        <InputText @bind-Value="Model.Title" class="form-control"/>
+        <ValidationMessage For="@(() => Model.Title)" />
+    </div>
+    @if(ErrorMessage == true)
+    {
+        <div>
+            <p>Não foi possível criar a categoria</p>
+        </div>
+    }
+    <button class="btn btn-success mt-4 rounded" type="submit">Criar</button>
+</EditForm>
+
+@code{
+    public Category Model { get; set; } = new();
+    public bool ErrorMessage { get; set; } = false;
+    public async Task OnSubmitAsync()
+    {
+        try
+        {
+            await Context.Categories.AddAsync(Model);
+            await Context.SaveChangesAsync();
+            Navigate.NavigateTo("/categories");
+        }catch
+        {
+            ErrorMessage = true;
+        }
+    }
+}

@@ -1,0 +1,53 @@
+﻿@page "/products"
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Context
+@rendermode InteractiveServer
+
+<h1>Produtos</h1>
+<a href="/products/create" class="btn btn-secondary">Criar produto</a>
+<br />
+@if (!Products.Any())
+{
+    <p class="text-center">
+        <em>Não existe produto cadastrado</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id: </th>
+                <th>Nome: </th>
+                <th>Categoria: </th>
+                <th>Preço: </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Products)
+            {
+                <tr>
+                    <td>@product.Id</td>
+                    <td>@product.Title</td>
+                    <td>@product.Category.Title</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>
+                        <a href="/products/@product.Id" class="btn btn-primary">Visualizar</a>
+                        <a href="/products/edit/@product.Id" class="btn btn-primary">Editar</a>
+                        <a href="/products/delete/@product.Id" class="btn btn-danger">Excluir</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    public List<Product> Products { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await Context.Products.AsNoTracking().Include(x => x.Category).ToListAsync();
+    }
+}
